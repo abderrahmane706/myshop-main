@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Block admin and API routes from crawling
+Disallow: /api/
+Disallow: /admin/
+
+Sitemap: https://dargelghourabaa.com/sitemap.xml
