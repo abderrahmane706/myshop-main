@@ -43,6 +43,7 @@ export function CategoriesSection() {
                 transition={{ delay: i * 0.06, duration: 0.5 }}>
                 <Link href={`/products?category=${c.slug}`}
                   className="group relative block aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden bg-brand-bg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={c.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/30 to-transparent" />
                   <div className="absolute inset-0 p-4 flex flex-col justify-between text-white">

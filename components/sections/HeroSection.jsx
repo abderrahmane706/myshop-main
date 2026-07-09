@@ -94,6 +94,7 @@ export function HeroSection() {
                   i === 0 ? 'left-0 top-8 z-10' : i === 1 ? 'left-52 top-32 z-20' : 'right-0 top-0 z-10'
                 }`}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
@@ -128,6 +129,7 @@ export function HeroSection() {
                 <motion.div key={p.id}
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i*0.1 }}
                   className={`rounded-2xl overflow-hidden aspect-[3/4] shadow-soft ${i===1 ? 'translate-y-4' : ''}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
                 </motion.div>
               ))}

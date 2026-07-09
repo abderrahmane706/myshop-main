@@ -50,6 +50,7 @@ export function PromoBanner() {
               <motion.div initial={{ scale: 0.9, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }}
                 className="absolute inset-0 grid place-items-center">
                 <div className="relative w-64 h-72 rounded-3xl overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={featured.images[0]} alt="" className="w-full h-full object-cover" />
                   <div className="absolute -bottom-3 -left-4 bg-white rounded-2xl px-4 py-2 shadow-soft-lg">
                     <div className="text-[10px] text-brand-text/60 uppercase tracking-widest">from</div>

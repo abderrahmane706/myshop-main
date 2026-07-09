@@ -39,6 +39,7 @@ export default function AdminDashboard() {
   // Fetch orders when token exists
   useEffect(() => {
     if (token) fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Polling for new orders
@@ -46,6 +47,7 @@ export default function AdminDashboard() {
     if (!token) return;
     const interval = setInterval(fetchOrders, 30000); // Check every 30s
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const login = async (e) => {

@@ -29,6 +29,7 @@ export function Navbar() {
     on();
     window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const suggestions = query.length > 1

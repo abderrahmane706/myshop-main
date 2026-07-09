@@ -51,6 +51,7 @@ export function CartDrawer() {
                     initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, height: 0 }}
                     className="flex gap-4 p-5">
                     <div className="h-24 w-20 rounded-lg overflow-hidden bg-brand-bg shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={i.image} alt="" className="h-full w-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
