@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { formatMoney } from '@/lib/utils';
-import { Package, Search, Phone, MapPin, Calendar, Clock, RefreshCw, LogOut, Bell } from 'lucide-react';
+import { Package, Search, Phone, Calendar, RefreshCw, LogOut, Bell, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
