@@ -12,7 +12,11 @@ export function HeroSection() {
   const lang = useLanguage(s => s.lang);
   const PRODUCTS = useStorefront(s => s.products);
 
-  const heroProducts = [PRODUCTS[0], PRODUCTS[4], PRODUCTS[8]];
+  const heroProducts = [
+    PRODUCTS[0],
+    PRODUCTS[4] || PRODUCTS[1],
+    PRODUCTS[8] || PRODUCTS[2]
+  ].filter(Boolean);
 
   return (
     <section className="relative overflow-hidden bg-brand-bg">
