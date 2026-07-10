@@ -16,7 +16,7 @@ export function CategoriesSection() {
   // Take one representative image per category
   const withImage = CATEGORIES.map(c => ({
     ...c,
-    image: PRODUCTS.find(p => p.category === c.slug)?.images[0] || PRODUCTS[0].images[0],
+    image: PRODUCTS.find(p => p.category === c.slug)?.images?.[0] || PRODUCTS[0]?.images?.[0] || '/placeholder.png',
     count: PRODUCTS.filter(p => c.slug === 'new-collection' ? p.tags.includes('new-collection') : c.slug === 'sale' ? (p.tags.includes('sale') || p.compare_at) : p.category === c.slug).length,
   }));
 

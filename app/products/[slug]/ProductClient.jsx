@@ -60,7 +60,7 @@ export function ProductClient({ product }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <motion.img
               key={selectedImage}
-              src={product.images[selectedImage]}
+              src={product.images?.[selectedImage] || '/placeholder.png'}
               alt={name}
               initial={{ opacity: 0.5, scale: 1.02 }} animate={{ opacity: 1, scale: 1 }}
               className="absolute inset-0 h-full w-full object-cover"
@@ -69,9 +69,9 @@ export function ProductClient({ product }) {
               <Badge className="absolute top-4 start-4 bg-brand-orange hover:bg-brand-orange text-white border-0 rounded-md text-sm font-bold px-3 py-1 shadow-orange">-{discount}%</Badge>
             )}
           </div>
-          {product.images.length > 1 && (
+          {(product.images?.length || 0) > 1 && (
             <div className="mt-4 grid grid-cols-5 gap-3">
-              {product.images.map((img, i) => (
+              {(product.images || []).map((img, i) => (
                 <button key={i} onClick={() => setSelectedImage(i)}
                   className={`aspect-square rounded-xl overflow-hidden border-2 transition ${selectedImage === i ? 'border-brand-primary shadow-brand' : 'border-transparent opacity-70 hover:opacity-100'}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -200,7 +200,7 @@ export function ProductClient({ product }) {
             onClick={() => setZoom(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <motion.img initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-              src={product.images[selectedImage]} alt="" className="max-h-full max-w-full rounded-2xl" />
+              src={product.images?.[selectedImage] || '/placeholder.png'} alt="" className="max-h-full max-w-full rounded-2xl" />
           </motion.div>
         )}
       </AnimatePresence>

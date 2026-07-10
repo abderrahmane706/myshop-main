@@ -56,7 +56,7 @@ export function ProductForm({ initial = null, productId = null }) {
     setUploading(true);
     try {
       const urls = await Promise.all(files.map(f => uploadImageToSupabase(f)));
-      set('images', [...form.images, ...urls]);
+      set('images', [...(form.images || []), ...urls]);
       toast.success(`${urls.length} image${urls.length !== 1 ? 's' : ''} uploaded`);
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
@@ -65,9 +65,7 @@ export function ProductForm({ initial = null, productId = null }) {
     e.target.value = '';
   };
 
-  const removeImage = (idx) => {
-    set('images', form.images.filter((_, i) => i !== idx));
-  };
+    set('images', (form.images || []).filter((_, i) => i !== idx));
 
   // Drag-and-drop image reorder
   const handleDragStart = (e, idx) => {
@@ -81,7 +79,7 @@ export function ProductForm({ initial = null, productId = null }) {
   const handleDrop = (e, targetIdx) => {
     e.preventDefault();
     if (dragIndex === null || dragIndex === targetIdx) { setDragOverIndex(null); return; }
-    const imgs = [...form.images];
+    const imgs = [...(form.images || [])];
     const [moved] = imgs.splice(dragIndex, 1);
     imgs.splice(targetIdx, 0, moved);
     set('images', imgs);
@@ -221,9 +219,9 @@ export function ProductForm({ initial = null, productId = null }) {
                 </button>
 
                 {/* Image grid */}
-                {form.images.length > 0 && (
+                {(form.images || []).length > 0 && (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                    {form.images.map((url, idx) => (
+                    {(form.images || []).map((url, idx) => (
                       <div
                         key={url + idx}
                         draggable

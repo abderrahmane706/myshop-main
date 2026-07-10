@@ -118,7 +118,7 @@ export function Navbar() {
                     <Link key={p.id} href={`/products/${p.slug}`}
                       className="flex items-center gap-3 p-3 hover:bg-brand-bg transition">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.images[0]} alt="" className="h-10 w-10 rounded-md object-cover" />
+                      <img src={p.images?.[0]} alt="" className="h-10 w-10 rounded-md object-cover" />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{lang==='ar'?p.name_ar:p.name_en}</div>
                         <div className="text-xs text-brand-text/60">{p.brand}</div>

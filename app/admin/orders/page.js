@@ -240,7 +240,7 @@ function OrdersContent() {
                                 <div key={i} className="flex items-center gap-3 p-3 text-sm">
                                   <div className="w-8 h-8 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    {item.images?.[0] && <img src={item.images[0]} alt="" className="w-full h-full object-cover" />}
+                                    {(item.image || item.images?.[0]) && <img src={item.image || item.images?.[0]} alt="" className="w-full h-full object-cover" />}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="font-medium truncate">{item.name_en}</div>

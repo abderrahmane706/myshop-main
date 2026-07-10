@@ -370,7 +370,7 @@ export default function CheckoutPage() {
                   <div key={`${item.id}-${item.selectedColor || ''}`} className="flex gap-4">
                     <div className="w-20 h-20 bg-brand-bg rounded-xl overflow-hidden shrink-0 border border-black/5 relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                      <img src={item.image || item.images?.[0] || '/placeholder.png'} alt="" className="w-full h-full object-cover" />
                       <span className="absolute -top-2 -right-2 bg-brand-dark text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
                         {item.qty}
                       </span>

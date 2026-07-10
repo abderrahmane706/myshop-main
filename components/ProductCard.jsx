@@ -36,7 +36,7 @@ export function ProductCard({ product, index = 0, className }) {
         <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gradient-to-br from-brand-bg to-brand-bg-alt">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={product.images[0]}
+            src={product.images?.[0]}
             alt={name}
             loading="lazy"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
