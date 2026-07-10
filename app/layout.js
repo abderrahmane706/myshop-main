@@ -5,6 +5,8 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { CartDrawer } from '@/components/CartDrawer';
 import { MobileTabBar } from '@/components/MobileTabBar';
+import { StorefrontProvider } from '@/components/StorefrontProvider';
+import { createSupabaseAdmin } from '@/lib/supabase/admin';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
@@ -34,23 +36,39 @@ export const metadata = {
 
 export const viewport = { themeColor: '#0B3C91' };
 
-function App({ children }) {
+export default async function App({ children }) {
+  const db = createSupabaseAdmin();
+  const [pRes, cRes, sRes] = await Promise.all([
+    db.from('products').select('*').eq('published', true),
+    db.from('categories').select('*').order('sort_order'),
+    db.from('store_settings').select('*')
+  ]);
+  
+  const settings = {};
+  (sRes.data || []).forEach(row => { settings[row.key] = row.value; });
+
+  const data = {
+    products: pRes.data || [],
+    categories: cRes.data || [],
+    settings
+  };
+
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning className={inter.variable}>
       <head>
         <script dangerouslySetInnerHTML={{__html:'window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);'}} />
       </head>
       <body className="font-sans bg-brand-bg text-brand-text antialiased min-h-screen flex flex-col">
-        <Providers>
-          <Navbar />
-          <main className="flex-1 pb-24 md:pb-0">{children}</main>
-          <Footer />
-          <CartDrawer />
-          <MobileTabBar />
-        </Providers>
+        <StorefrontProvider data={data}>
+          <Providers>
+            <Navbar />
+            <main className="flex-1 pb-24 md:pb-0">{children}</main>
+            <Footer />
+            <CartDrawer />
+            <MobileTabBar />
+          </Providers>
+        </StorefrontProvider>
       </body>
     </html>
   );
 }
-
-export default App;

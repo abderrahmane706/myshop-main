@@ -1,12 +1,13 @@
 'use client';
 import { motion } from 'framer-motion';
-import { getNewArrivals } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/lib/store/language';
 
 export function NewArrivalsSection() {
   const t = useLanguage(s => s.t);
-  const items = getNewArrivals();
+  const PRODUCTS = useStorefront(s => s.products);
+  const items = PRODUCTS.filter(p => p.tags?.includes('new-collection'));
   if (items.length === 0) return null;
   return (
     <section className="py-16 md:py-24 bg-white">

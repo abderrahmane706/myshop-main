@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdmin } from '@/lib/supabase/admin';
-import { PRODUCTS, CATEGORIES, getProduct, getProductsByCategory } from '@/lib/data/products';
 import { v4 as uuidv4 } from 'uuid';
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
 function cors(res) {
   res.headers.set('Access-Control-Allow-Origin', '*');
   res.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -12,82 +10,169 @@ function cors(res) {
 }
 export async function OPTIONS() { return cors(NextResponse.json({}, { status: 200 })); }
 
-// ── Admin auth helper ─────────────────────────────────────────────────────────
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin1234';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'DarElGhourabaa@Admin2026!';
 
-function isAdminAuthorized(request) {
+function isAdmin(request) {
   const auth = request.headers.get('authorization') || '';
   return auth === `Bearer ${ADMIN_PASSWORD}`;
+}
+
+function unauthorized() {
+  return cors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
 }
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(request, { params }) {
   const parts = (await params)?.path || [];
   const path = parts.join('/');
+  const url = new URL(request.url);
 
   try {
-    // Health check
+    // Health
     if (path === '' || path === 'health') {
-      return cors(NextResponse.json({ ok: true, service: 'Dar el Ghourabaa Market API' }));
+      return cors(NextResponse.json({ ok: true, service: 'Dar el Ghourabaa Market API v2' }));
     }
 
-    // Products
+    // ── Public: Products ──────────────────────────────────────────────────────
     if (path === 'products') {
-      const url = new URL(request.url);
+      const db = createSupabaseAdmin();
       const category = url.searchParams.get('category');
       const q = (url.searchParams.get('q') || '').toLowerCase();
       const sort = url.searchParams.get('sort') || 'featured';
-      let items = category ? getProductsByCategory(category) : PRODUCTS;
-      if (q) {
-        items = items.filter(p =>
-          p.name_en.toLowerCase().includes(q) ||
-          p.name_ar.includes(q) ||
-          p.brand.toLowerCase().includes(q) ||
-          p.category.includes(q)
-        );
-      }
-      if (sort === 'price-asc')  items = [...items].sort((a,b) => a.price - b.price);
-      else if (sort === 'price-desc') items = [...items].sort((a,b) => b.price - a.price);
-      else if (sort === 'rating')     items = [...items].sort((a,b) => b.rating - a.rating);
-      else if (sort === 'newest')     items = [...items].sort((a,b) => (b.tags.includes('new-collection')?1:0) - (a.tags.includes('new-collection')?1:0));
+      const admin = url.searchParams.get('admin') === '1';
+
+      let query = db.from('products').select('*');
+      if (!admin) query = query.eq('published', true);
+      if (category && category !== 'all') query = query.eq('category', category);
+
+      const { data, error } = await query;
+      if (error) return cors(NextResponse.json({ items: [], count: 0 }));
+
+      let items = data || [];
+      if (q) items = items.filter(p =>
+        p.name_en?.toLowerCase().includes(q) ||
+        p.name_ar?.includes(q) ||
+        p.brand?.toLowerCase().includes(q)
+      );
+
+      if (sort === 'price-asc') items = [...items].sort((a, b) => a.price - b.price);
+      else if (sort === 'price-desc') items = [...items].sort((a, b) => b.price - a.price);
+      else if (sort === 'rating') items = [...items].sort((a, b) => b.rating - a.rating);
+      else if (sort === 'featured') items = [...items].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+
       return cors(NextResponse.json({ items, count: items.length }));
     }
 
+    // ── Public: Single Product by slug ────────────────────────────────────────
+    if (path.startsWith('products/') && parts.length === 2) {
+      const db = createSupabaseAdmin();
+      const slug = parts[1];
+      const { data, error } = await db.from('products').select('*').eq('slug', slug).maybeSingle();
+      if (error || !data) return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
+      return cors(NextResponse.json({ product: data }));
+    }
+
+    // ── Public: Categories ────────────────────────────────────────────────────
     if (path === 'categories') {
-      return cors(NextResponse.json({ items: CATEGORIES }));
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('categories').select('*').order('sort_order');
+      if (error) return cors(NextResponse.json({ items: [] }));
+      return cors(NextResponse.json({ items: data || [] }));
     }
 
-    if (path.startsWith('products/')) {
-      const slug = path.split('/')[1];
-      const p = getProduct(slug);
-      if (!p) return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
-      return cors(NextResponse.json({ product: p }));
+    // ── Public: Settings ──────────────────────────────────────────────────────
+    if (path === 'settings') {
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('store_settings').select('*');
+      if (error) return cors(NextResponse.json({ settings: {} }));
+      const settings = {};
+      (data || []).forEach(row => { settings[row.key] = row.value; });
+      return cors(NextResponse.json({ settings }));
     }
 
-    // Single order by ID (public — for confirmation page)
+    // ── Public: Single order by ID ────────────────────────────────────────────
     if (path.startsWith('orders/')) {
       const id = path.split('/')[1];
-      const admin = createSupabaseAdmin();
-      const { data, error } = await admin.from('orders').select('*').eq('id', id).maybeSingle();
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('orders').select('*').eq('id', id).maybeSingle();
       if (error || !data) return cors(NextResponse.json({ error: 'Order not found' }, { status: 404 }));
       return cors(NextResponse.json({ order: data }));
     }
 
-    // ── ADMIN: all orders list ────────────────────────────────────────────────
+    // ── ADMIN: All orders ─────────────────────────────────────────────────────
     if (path === 'admin/orders') {
-      if (!isAdminAuthorized(request)) {
-        return cors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
-      }
-      const admin = createSupabaseAdmin();
-      const { data, error } = await admin
-        .from('orders')
-        .select('*')
-        .order('placed_at', { ascending: false });
-      if (error) {
-        console.warn('[admin orders fetch]', error.message);
-        return cors(NextResponse.json({ orders: [] }));
-      }
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const status = url.searchParams.get('status');
+      let query = db.from('orders').select('*').order('placed_at', { ascending: false });
+      if (status && status !== 'all') query = query.eq('status', status);
+      const { data, error } = await query;
+      if (error) return cors(NextResponse.json({ orders: [] }));
       return cors(NextResponse.json({ orders: data || [] }));
+    }
+
+    // ── ADMIN: Dashboard stats ────────────────────────────────────────────────
+    if (path === 'admin/stats') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const [ordersRes, productsRes, todayOrdersRes, recentOrdersRes] = await Promise.all([
+        db.from('orders').select('total, status'),
+        db.from('products').select('id, stock, published'),
+        db.from('orders').select('id').gte('placed_at', today.toISOString()),
+        db.from('orders').select('*').order('placed_at', { ascending: false }).limit(5),
+      ]);
+
+      const orders = ordersRes.data || [];
+      const products = productsRes.data || [];
+
+      const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + Number(o.total), 0);
+      const pendingOrders = orders.filter(o => o.status === 'pending').length;
+      const lowStock = products.filter(p => p.stock <= 5).length;
+
+      return cors(NextResponse.json({
+        totalRevenue,
+        totalOrders: orders.length,
+        ordersToday: (todayOrdersRes.data || []).length,
+        totalProducts: products.length,
+        publishedProducts: products.filter(p => p.published).length,
+        pendingOrders,
+        lowStockProducts: lowStock,
+        recentOrders: recentOrdersRes.data || [],
+      }));
+    }
+
+    // ── ADMIN: Single product ─────────────────────────────────────────────────
+    if (path.startsWith('admin/products/') && parts.length === 3) {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const id = parts[2];
+      const { data, error } = await db.from('products').select('*').eq('id', id).maybeSingle();
+      if (error || !data) return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
+      return cors(NextResponse.json({ product: data }));
+    }
+
+    // ── ADMIN: Categories (admin view) ────────────────────────────────────────
+    if (path === 'admin/categories') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('categories').select('*').order('sort_order');
+      if (error) return cors(NextResponse.json({ categories: [] }));
+      return cors(NextResponse.json({ categories: data || [] }));
+    }
+
+    // ── ADMIN: Settings ───────────────────────────────────────────────────────
+    if (path === 'admin/settings') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('store_settings').select('*');
+      if (error) return cors(NextResponse.json({ settings: {} }));
+      const settings = {};
+      (data || []).forEach(row => { settings[row.key] = row.value; });
+      return cors(NextResponse.json({ settings }));
     }
 
     return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
@@ -103,11 +188,10 @@ export async function POST(request, { params }) {
   const body = await request.json().catch(() => ({}));
 
   try {
-    // ── Place order (lead) ──────────────────────────────────────────────────
+    // ── Place order (lead) ────────────────────────────────────────────────────
     if (path === 'orders') {
       const { items, customer, address, notes, subtotal, shipping, total } = body || {};
 
-      // Validate required fields
       if (!Array.isArray(items) || items.length === 0)
         return cors(NextResponse.json({ error: 'No items in cart' }, { status: 400 }));
       if (!customer?.name?.trim())
@@ -122,60 +206,72 @@ export async function POST(request, { params }) {
       const orderId = uuidv4();
       const orderNumber = 'DGM-' + orderId.split('-')[0].toUpperCase();
       const record = {
-        id: orderId,
-        order_number: orderNumber,
-        status: 'pending',
-        payment_method: 'cash_on_delivery',
-        payment_status: 'unpaid',
-        items,
-        customer: {
-          name: customer.name.trim(),
-          phone: customer.phone.trim(),
-        },
-        address: {
-          wilaya: address.wilaya,
-          wilayaCode: address.wilayaCode || '',
-          municipality: address.municipality || '',
-          address: address.address.trim(),
-        },
-        notes: notes || '',
-        subtotal: Number(subtotal || 0),
-        shipping: Number(shipping || 0),
-        total: Number(total || 0),
-        currency: 'DZD',
-        placed_at: new Date().toISOString(),
+        id: orderId, order_number: orderNumber, status: 'pending',
+        payment_method: 'cash_on_delivery', payment_status: 'unpaid',
+        items, customer: { name: customer.name.trim(), phone: customer.phone.trim() },
+        address: { wilaya: address.wilaya, wilayaCode: address.wilayaCode || '', municipality: address.municipality || '', address: address.address.trim() },
+        notes: notes || '', subtotal: Number(subtotal || 0), shipping: Number(shipping || 0),
+        total: Number(total || 0), currency: 'DZD', placed_at: new Date().toISOString(),
       };
 
-      // Persist to Supabase (best-effort — never block the customer response)
       try {
-        const admin = createSupabaseAdmin();
-        const { error } = await admin.from('orders').insert(record);
+        const db = createSupabaseAdmin();
+        const { error } = await db.from('orders').insert(record);
         if (error) console.warn('[orders insert]', error.message);
-      } catch (e) {
-        console.warn('[orders insert exception]', e?.message);
-      }
+      } catch (e) { console.warn('[orders insert exception]', e?.message); }
 
       return cors(NextResponse.json({ ok: true, order: record }));
     }
 
-    // ── Newsletter ──────────────────────────────────────────────────────────
+    // ── Newsletter ────────────────────────────────────────────────────────────
     if (path === 'newsletter') {
       const { email } = body || {};
       if (!email) return cors(NextResponse.json({ error: 'Missing email' }, { status: 400 }));
       try {
-        const admin = createSupabaseAdmin();
-        await admin.from('newsletter_subscribers').insert({ id: uuidv4(), email, created_at: new Date().toISOString() });
+        const db = createSupabaseAdmin();
+        await db.from('newsletter_subscribers').insert({ id: uuidv4(), email, created_at: new Date().toISOString() });
       } catch (e) { /* ignore */ }
       return cors(NextResponse.json({ ok: true }));
     }
 
-    // ── Admin: verify password ──────────────────────────────────────────────
+    // ── Admin verify ──────────────────────────────────────────────────────────
     if (path === 'admin/verify') {
       const { password } = body || {};
       if (password === ADMIN_PASSWORD) {
         return cors(NextResponse.json({ ok: true, token: ADMIN_PASSWORD }));
       }
       return cors(NextResponse.json({ error: 'Invalid password' }, { status: 401 }));
+    }
+
+    // ── ADMIN: Create product ─────────────────────────────────────────────────
+    if (path === 'admin/products') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const product = {
+        ...body,
+        id: uuidv4(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const { data, error } = await db.from('products').insert(product).select().single();
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true, product: data }));
+    }
+
+    // ── ADMIN: Create category ────────────────────────────────────────────────
+    if (path === 'admin/categories') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('categories').insert({ id: uuidv4(), ...body }).select().single();
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true, category: data }));
+    }
+
+    // ── ADMIN: Upload image URL (returns the URL after Supabase Storage upload) ─
+    if (path === 'admin/upload') {
+      if (!isAdmin(request)) return unauthorized();
+      // We just pass through the signed URL to the client — actual upload happens client-side
+      return cors(NextResponse.json({ ok: true }));
     }
 
     return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
@@ -191,25 +287,81 @@ export async function PUT(request, { params }) {
   const body = await request.json().catch(() => ({}));
 
   try {
-    // ── Admin: update order status ──────────────────────────────────────────
+    // ── Admin: update order status ────────────────────────────────────────────
     if (path === 'admin/orders') {
-      if (!isAdminAuthorized(request)) {
-        return cors(NextResponse.json({ error: 'Unauthorized' }, { status: 401 }));
-      }
+      if (!isAdmin(request)) return unauthorized();
       const { id, status } = body || {};
       const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled'];
-      if (!id || !VALID_STATUSES.includes(status)) {
+      if (!id || !VALID_STATUSES.includes(status))
         return cors(NextResponse.json({ error: 'Invalid id or status' }, { status: 400 }));
-      }
-      const admin = createSupabaseAdmin();
-      const { error } = await admin
-        .from('orders')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) {
-        console.warn('[status update]', error.message);
-        return cors(NextResponse.json({ error: error.message }, { status: 500 }));
-      }
+      const db = createSupabaseAdmin();
+      const { error } = await db.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true }));
+    }
+
+    // ── ADMIN: Update product ─────────────────────────────────────────────────
+    if (path.startsWith('admin/products/') && parts.length === 3) {
+      if (!isAdmin(request)) return unauthorized();
+      const id = parts[2];
+      const db = createSupabaseAdmin();
+      const { id: _id, created_at: _c, ...updates } = body;
+      const { data, error } = await db.from('products').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true, product: data }));
+    }
+
+    // ── ADMIN: Update category ────────────────────────────────────────────────
+    if (path.startsWith('admin/categories/') && parts.length === 3) {
+      if (!isAdmin(request)) return unauthorized();
+      const id = parts[2];
+      const db = createSupabaseAdmin();
+      const { id: _id, ...updates } = body;
+      const { data, error } = await db.from('categories').update(updates).eq('id', id).select().single();
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true, category: data }));
+    }
+
+    // ── ADMIN: Update settings ────────────────────────────────────────────────
+    if (path === 'admin/settings') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const updates = body || {};
+      const upserts = Object.entries(updates).map(([key, value]) => ({ key, value }));
+      const { error } = await db.from('store_settings').upsert(upserts, { onConflict: 'key' });
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true }));
+    }
+
+    return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
+  } catch (e) {
+    return cors(NextResponse.json({ error: e.message || 'Server error' }, { status: 500 }));
+  }
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+export async function DELETE(request, { params }) {
+  const parts = (await params)?.path || [];
+  const path = parts.join('/');
+
+  try {
+    // ── ADMIN: Delete product ─────────────────────────────────────────────────
+    if (path.startsWith('admin/products/') && parts.length === 3) {
+      if (!isAdmin(request)) return unauthorized();
+      const id = parts[2];
+      const db = createSupabaseAdmin();
+      const { error } = await db.from('products').delete().eq('id', id);
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true }));
+    }
+
+    // ── ADMIN: Delete category ────────────────────────────────────────────────
+    if (path.startsWith('admin/categories/') && parts.length === 3) {
+      if (!isAdmin(request)) return unauthorized();
+      const id = parts[2];
+      const db = createSupabaseAdmin();
+      const { error } = await db.from('categories').delete().eq('id', id);
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
       return cors(NextResponse.json({ ok: true }));
     }
 

@@ -3,7 +3,7 @@ import { useState, useMemo, Suspense, useRef, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { PRODUCTS, CATEGORIES, getProductsByCategory } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/lib/store/language';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,8 @@ function ProductsInner() {
   const q = params.get('q') || '';
   const lang = useLanguage(s => s.lang);
   const t = useLanguage(s => s.t);
+  const PRODUCTS = useStorefront(s => s.products);
+  const CATEGORIES = useStorefront(s => s.categories);
 
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [sort, setSort] = useState('featured');
@@ -36,7 +38,12 @@ function ProductsInner() {
   }, [params]);
 
   const filtered = useMemo(() => {
-    let list = getProductsByCategory(category);
+    let list = (() => {
+      if (!category || category === 'all') return PRODUCTS;
+      if (category === 'new-collection') return PRODUCTS.filter(p => p.tags?.includes('new-collection'));
+      if (category === 'sale') return PRODUCTS.filter(p => p.tags?.includes('sale') || p.compare_at);
+      return PRODUCTS.filter(p => p.category === category);
+    })();
     if (search) {
       const s = search.toLowerCase();
       list = list.filter(p =>
@@ -48,9 +55,9 @@ function ProductsInner() {
     if (sort === 'price-asc') list = [...list].sort((a,b)=>a.price-b.price);
     else if (sort === 'price-desc') list = [...list].sort((a,b)=>b.price-a.price);
     else if (sort === 'rating') list = [...list].sort((a,b)=>b.rating-a.rating);
-    else if (sort === 'newest') list = [...list].sort((a,b)=>(b.tags.includes('new-collection')?1:0)-(a.tags.includes('new-collection')?1:0));
+    else if (sort === 'newest') list = [...list].sort((a,b)=>(b.tags?.includes('new-collection')?1:0)-(a.tags?.includes('new-collection')?1:0));
     return list;
-  }, [category, search, priceRange, sort, minRating]);
+  }, [category, search, priceRange, sort, minRating, PRODUCTS]);
 
   const currentCat = CATEGORIES.find(c => c.slug === category);
 

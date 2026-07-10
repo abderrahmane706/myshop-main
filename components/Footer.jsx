@@ -2,10 +2,13 @@
 import Link from 'next/link';
 import { useLanguage } from '@/lib/store/language';
 import { Instagram, Facebook, Twitter, Youtube } from 'lucide-react';
+import { useStorefront } from '@/lib/store/storefront';
 
 export function Footer() {
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
+  const settings = useStorefront(s => s.settings) || {};
+  const storeName = settings.store_name || 'Dar el Ghourabaa Market';
 
   return (
     <footer className="bg-brand-dark text-white/85 mt-16">
@@ -17,7 +20,7 @@ export function Footer() {
                 <span className="text-white font-bold">DG</span>
               </div>
               <div className="leading-tight">
-                <div className="text-white font-semibold text-lg">Dar el Ghourabaa</div>
+                <div className="text-white font-semibold text-lg">{storeName.replace(' Market', '')}</div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-brand-orange">Market</div>
               </div>
             </div>
@@ -64,7 +67,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/50">
-          <p>© {new Date().getFullYear()} Dar el Ghourabaa Market. {t('footer.rights')}</p>
+          <p>© {new Date().getFullYear()} {storeName}. {t('footer.rights')}</p>
           <div className="flex items-center gap-6">
             <Link href="#" className="hover:text-white">{lang==='ar'?'الخصوصية':'Privacy'}</Link>
             <Link href="#" className="hover:text-white">{lang==='ar'?'الشروط':'Terms'}</Link>

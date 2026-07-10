@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Sparkles, Watch, Gem, Gift, Star, Tag, ArrowRight } from 'lucide-react';
-import { CATEGORIES, PRODUCTS } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { useLanguage } from '@/lib/store/language';
 
 const iconMap = { Sparkles, Watch, Gem, Gift, Star, Tag };
@@ -10,6 +10,8 @@ const iconMap = { Sparkles, Watch, Gem, Gift, Star, Tag };
 export function CategoriesSection() {
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
+  const PRODUCTS = useStorefront(s => s.products);
+  const CATEGORIES = useStorefront(s => s.categories);
 
   // Take one representative image per category
   const withImage = CATEGORIES.map(c => ({

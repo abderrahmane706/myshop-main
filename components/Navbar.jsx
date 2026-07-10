@@ -10,7 +10,7 @@ import { useCart } from '@/lib/store/cart';
 import { useLanguage } from '@/lib/store/language';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { cn } from '@/lib/utils';
-import { CATEGORIES, PRODUCTS } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { useRouter } from 'next/navigation';
 
 export function Navbar() {
@@ -23,6 +23,11 @@ export function Navbar() {
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
   const router = useRouter();
+  
+  const PRODUCTS = useStorefront(s => s.products);
+  const CATEGORIES = useStorefront(s => s.categories);
+  const settings = useStorefront(s => s.settings) || {};
+  const threshold = Number(settings.free_shipping_threshold) || 150;
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 12);
@@ -50,7 +55,7 @@ export function Navbar() {
       {/* Top bar */}
       <div className="bg-brand-dark text-white text-xs">
         <div className="container flex items-center justify-between h-9">
-          <p className="opacity-80">{lang==='ar' ? 'شحن مجاني للطلبات فوق 150$ · دفع عند الاستلام' : 'Free shipping over $150 · Cash on delivery · 14-day returns'}</p>
+          <p className="opacity-80">{lang==='ar' ? `شحن مجاني للطلبات فوق ${threshold} · دفع عند الاستلام` : `Free shipping over ${threshold} DZD · Cash on delivery`}</p>
           <div className="hidden md:flex items-center gap-4 opacity-80">
             <Link href="#" className="hover:text-brand-orange transition">Track order</Link>
             <span>|</span>

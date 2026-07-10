@@ -7,7 +7,7 @@ import { Heart, Share2, Minus, Plus, Truck, Shield, RotateCcw, Star, ChevronRigh
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PRODUCTS, CATEGORIES } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { ProductCard } from '@/components/ProductCard';
 import { useCart } from '@/lib/store/cart';
 import { useLanguage } from '@/lib/store/language';
@@ -22,6 +22,9 @@ export function ProductClient({ product }) {
   const add = useCart(s => s.add);
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
+  
+  const PRODUCTS = useStorefront(s => s.products);
+  const CATEGORIES = useStorefront(s => s.categories);
 
   const name = lang === 'ar' ? product.name_ar : product.name_en;
   const description = lang === 'ar' ? product.description_ar : product.description_en;

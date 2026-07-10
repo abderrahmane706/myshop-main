@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Star, Shield, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/lib/store/language';
-import { PRODUCTS } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { formatMoney } from '@/lib/utils';
 
 export function HeroSection() {
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
+  const PRODUCTS = useStorefront(s => s.products);
 
   const heroProducts = [PRODUCTS[0], PRODUCTS[4], PRODUCTS[8]];
 

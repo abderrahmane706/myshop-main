@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Percent, Truck, Shield } from 'lucide-react';
 import { useLanguage } from '@/lib/store/language';
-import { PRODUCTS } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 
 export function PromoBanner() {
   const lang = useLanguage(s => s.lang);
+  const PRODUCTS = useStorefront(s => s.products);
+  
   const featured = PRODUCTS.find(p => p.slug === 'aurum-chronograph') || PRODUCTS[4];
 
   return (

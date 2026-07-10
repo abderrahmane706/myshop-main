@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { getFeatured } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/lib/store/language';
 import Link from 'next/link';
@@ -9,7 +9,8 @@ import { ArrowRight } from 'lucide-react';
 export function FeaturedSection() {
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
-  const items = getFeatured();
+  const PRODUCTS = useStorefront(s => s.products);
+  const items = PRODUCTS.filter(p => p.featured);
   return (
     <section className="py-16 md:py-24 bg-white">
       <div className="container">

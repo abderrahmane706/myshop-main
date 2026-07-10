@@ -1,12 +1,13 @@
 'use client';
 import { motion } from 'framer-motion';
-import { getBestsellers } from '@/lib/data/products';
+import { useStorefront } from '@/lib/store/storefront';
 import { ProductCard } from '@/components/ProductCard';
 import { useLanguage } from '@/lib/store/language';
 
 export function BestsellersSection() {
   const t = useLanguage(s => s.t);
-  const items = getBestsellers();
+  const PRODUCTS = useStorefront(s => s.products);
+  const items = PRODUCTS.filter(p => p.bestseller);
   return (
     <section className="py-16 md:py-24">
       <div className="container">

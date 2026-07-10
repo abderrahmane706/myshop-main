@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import { getProduct, PRODUCTS } from '@/lib/data/products';
 import { ProductClient } from './ProductClient';
+import { createSupabaseAdmin } from '@/lib/supabase/admin';
 
 // ── Server-side metadata ──
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const db = createSupabaseAdmin();
+  const { data: product } = await db.from('products').select('*').eq('slug', slug).maybeSingle();
+  
   if (!product) {
     return { title: 'Product Not Found | Dar el Ghourabaa Market' };
   }
@@ -17,7 +19,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: `${product.name_en} — ${product.brand}`,
       description: product.description_en,
-      images: product.images[0] ? [{ url: product.images[0], width: 1200, height: 1200 }] : [],
+      images: product.images?.[0] ? [{ url: product.images[0], width: 1200, height: 1200 }] : [],
       type: 'website',
       url: `${baseUrl}/products/${product.slug}`,
     },
@@ -25,15 +27,18 @@ export async function generateMetadata({ params }) {
 }
 
 export async function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }));
+  const db = createSupabaseAdmin();
+  const { data: products } = await db.from('products').select('slug').eq('published', true);
+  return (products || []).map((p) => ({ slug: p.slug }));
 }
 
 // ── Server component ──
 export default async function ProductPage({ params }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const db = createSupabaseAdmin();
+  const { data: product } = await db.from('products').select('*').eq('slug', slug).maybeSingle();
 
-  if (!product) {
+  if (!product || !product.published) {
     return (
       <div className="container py-24 text-center">
         <h1 className="text-2xl font-bold">Product not found</h1>

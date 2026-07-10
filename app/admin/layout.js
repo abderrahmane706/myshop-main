@@ -1,13 +1,9 @@
 export const metadata = {
-  title: 'Admin Dashboard | Dar el Ghourabaa Market',
-  description: 'Manage store orders and leads.',
+  title: { default: 'Admin CMS | Dar el Ghourabaa', template: '%s | Admin' },
+  description: 'Dar el Ghourabaa Market Admin Panel',
   robots: { index: false, follow: false },
 };
 
-export default function AdminLayout({ children }) {
-  return (
-    <div className="min-h-screen bg-gray-50 font-sans" dir="ltr">
-      {children}
-    </div>
-  );
+export default function AdminRootLayout({ children }) {
+  return children;
 }
