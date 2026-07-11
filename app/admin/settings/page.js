@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, Loader2, Store, Phone, Truck } from 'lucide-react';
+import { Save, Loader2, Store, Phone, Truck, Instagram } from 'lucide-react';
 import { adminApi, hasAdminToken } from '@/lib/admin-api';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Button } from '@/components/ui/button';
