@@ -64,9 +64,9 @@ export function ProductForm({ initial = null, productId = null }) {
     setUploading(false);
     e.target.value = '';
   };
-
+  const removeImage = (idx) => {
     set('images', (form.images || []).filter((_, i) => i !== idx));
-
+  };
   // Drag-and-drop image reorder
   const handleDragStart = (e, idx) => {
     setDragIndex(idx);
