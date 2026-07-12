@@ -23,7 +23,13 @@ function ProductsInner() {
   const PRODUCTS = useStorefront(s => s.products);
   const CATEGORIES = useStorefront(s => s.categories);
 
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const maxPrice = useMemo(() => {
+    if (!PRODUCTS.length) return 100000;
+    return Math.ceil(Math.max(...PRODUCTS.map(p => Number(p.price) || 0)) / 1000) * 1000 || 100000;
+  }, [PRODUCTS]);
+
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const effectivePriceRange = [priceRange[0], priceRange[1] === 100000 ? maxPrice : priceRange[1]];
   const [sort, setSort] = useState('featured');
   const [minRating, setMinRating] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -51,13 +57,13 @@ function ProductsInner() {
         p.brand.toLowerCase().includes(s) || p.category.includes(s)
       );
     }
-    list = list.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1] && p.rating >= minRating);
+    list = list.filter(p => p.price >= effectivePriceRange[0] && p.price <= effectivePriceRange[1] && p.rating >= minRating);
     if (sort === 'price-asc') list = [...list].sort((a,b)=>a.price-b.price);
     else if (sort === 'price-desc') list = [...list].sort((a,b)=>b.price-a.price);
     else if (sort === 'rating') list = [...list].sort((a,b)=>b.rating-a.rating);
     else if (sort === 'newest') list = [...list].sort((a,b)=>(b.tags?.includes('new-collection')?1:0)-(a.tags?.includes('new-collection')?1:0));
     return list;
-  }, [category, search, priceRange, sort, minRating, PRODUCTS]);
+  }, [category, search, effectivePriceRange, sort, minRating, PRODUCTS]);
 
   const currentCat = CATEGORIES.find(c => c.slug === category);
 
@@ -115,9 +121,9 @@ function ProductsInner() {
             </div>
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-brand-text/60 mb-3 block">{lang==='ar'?'السعر':'Price'}</label>
-              <Slider min={0} max={500} step={10} value={priceRange} onValueChange={setPriceRange} className="my-4" />
+              <Slider min={0} max={maxPrice} step={Math.ceil(maxPrice / 100)} value={priceRange} onValueChange={setPriceRange} className="my-4" />
               <div className="flex justify-between text-sm text-brand-text/70">
-                <span>${priceRange[0]}</span><span>${priceRange[1]}</span>
+                <span>{priceRange[0].toLocaleString()} DZD</span><span>{(priceRange[1] >= maxPrice ? maxPrice : priceRange[1]).toLocaleString()} DZD</span>
               </div>
             </div>
             <div>
