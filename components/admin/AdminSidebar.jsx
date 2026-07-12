@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, Package, ShoppingBag, FolderOpen, Settings,
-  LogOut, Menu, X, ChevronRight, Bell, Store
+  LogOut, Menu, X, ChevronRight, Bell, Store, Truck
 } from 'lucide-react';
 import { clearAdminToken } from '@/lib/admin-api';
 import { cn } from '@/lib/utils';
@@ -14,8 +14,10 @@ const NAV = [
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/categories', label: 'Categories', icon: FolderOpen },
+  { href: '/admin/shipping', label: 'Shipping', icon: Truck },
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
+
 
 export function AdminSidebar({ pendingCount = 0 }) {
   const path = usePathname();

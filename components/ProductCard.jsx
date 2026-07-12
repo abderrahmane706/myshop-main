@@ -1,9 +1,10 @@
 'use client';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Heart, Plus, Star } from 'lucide-react';
+import { Heart, Plus, Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/lib/store/cart';
 import { useLanguage } from '@/lib/store/language';
+import { useOrderForm } from '@/lib/store/order-form';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatMoney } from '@/lib/utils';
@@ -12,6 +13,7 @@ export function ProductCard({ product, index = 0, className }) {
   const add = useCart(s => s.add);
   const lang = useLanguage(s => s.lang);
   const t = useLanguage(s => s.t);
+  const openOrderForm = useOrderForm(s => s.open);
 
   const name = lang === 'ar' ? product.name_ar : product.name_en;
   const discount = product.compare_at ? Math.round(((product.compare_at - product.price) / product.compare_at) * 100) : 0;
@@ -22,6 +24,11 @@ export function ProductCard({ product, index = 0, className }) {
     toast.success(lang==='ar' ? 'تمت الإضافة إلى السلة' : 'Added to your bag', {
       description: name,
     });
+  };
+
+  const handleQuickOrder = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    openOrderForm(product, 1);
   };
 
   return (
@@ -68,10 +75,19 @@ export function ProductCard({ product, index = 0, className }) {
             <Heart className="h-4 w-4 text-brand-text/70" />
           </button>
 
+          {/* Quick Order floating */}
+          <button
+            onClick={handleQuickOrder}
+            className="absolute bottom-3 start-3 h-11 pe-4 ps-3 rounded-full bg-orange-500 text-white text-xs font-semibold flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 shadow-soft-lg hover:bg-orange-600"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Order Now
+          </button>
           {/* Add-to-cart floating */}
           <button
             onClick={handleAdd}
-            className="absolute bottom-3 end-3 h-11 pe-4 ps-3 rounded-full bg-brand-dark text-white text-xs font-semibold flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 shadow-soft-lg hover:bg-brand-orange">
+            className="absolute bottom-3 end-3 h-11 pe-4 ps-3 rounded-full bg-brand-dark text-white text-xs font-semibold flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 shadow-soft-lg hover:bg-brand-orange"
+          >
             <Plus className="h-4 w-4" />
             {t('product.addToCart')}
           </button>

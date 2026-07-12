@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Share2, Minus, Plus, Truck, Shield, RotateCcw, Star, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,15 +10,16 @@ import { useStorefront } from '@/lib/store/storefront';
 import { ProductCard } from '@/components/ProductCard';
 import { useCart } from '@/lib/store/cart';
 import { useLanguage } from '@/lib/store/language';
+import { useOrderForm } from '@/lib/store/order-form';
 import { toast } from 'sonner';
 import { formatMoney } from '@/lib/utils';
 
 export function ProductClient({ product }) {
-  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [zoom, setZoom] = useState(false);
   const add = useCart(s => s.add);
+  const openOrderForm = useOrderForm(s => s.open);
   const t = useLanguage(s => s.t);
   const lang = useLanguage(s => s.lang);
   
@@ -39,7 +39,7 @@ export function ProductClient({ product }) {
     add(product, qty);
     toast.success(lang === 'ar' ? 'تمت الإضافة إلى السلة' : 'Added to your bag', { description: name });
   };
-  const handleBuyNow = () => { handleAdd(); router.push('/checkout'); };
+  const handleBuyNow = () => { openOrderForm(product, qty); };
 
   return (
     <div className="container py-6 md:py-10">

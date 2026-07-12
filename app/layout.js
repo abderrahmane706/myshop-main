@@ -7,7 +7,9 @@ import { Footer } from '@/components/Footer';
 import { CartDrawer } from '@/components/CartDrawer';
 import { MobileTabBar } from '@/components/MobileTabBar';
 import { StorefrontProvider } from '@/components/StorefrontProvider';
+import { OrderFormModal } from '@/components/OrderFormModal';
 import { createSupabaseAdmin } from '@/lib/supabase/admin';
+
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
@@ -66,6 +68,7 @@ export default async function App({ children }) {
             <main className="flex-1 pb-24 md:pb-0">{children}</main>
             <Footer />
             <CartDrawer />
+            <OrderFormModal />
             <MobileTabBar />
           </Providers>
         </StorefrontProvider>

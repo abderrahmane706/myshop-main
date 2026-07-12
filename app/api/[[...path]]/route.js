@@ -175,6 +175,15 @@ export async function GET(request, { params }) {
       return cors(NextResponse.json({ settings }));
     }
 
+    // ── ADMIN: Shipping prices ─────────────────────────────────────────────────
+    if (path === 'admin/shipping') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const { data, error } = await db.from('store_settings').select('value').eq('key', 'shipping_by_wilaya').maybeSingle();
+      if (error) return cors(NextResponse.json({ shipping: {} }));
+      return cors(NextResponse.json({ shipping: data?.value || {} }));
+    }
+
     return cors(NextResponse.json({ error: 'Not found' }, { status: 404 }));
   } catch (e) {
     return cors(NextResponse.json({ error: e.message || 'Server error' }, { status: 500 }));
@@ -206,7 +215,7 @@ export async function POST(request, { params }) {
       const orderId = uuidv4();
       const orderNumber = 'DGM-' + orderId.split('-')[0].toUpperCase();
       const record = {
-        id: orderId, order_number: orderNumber, status: 'pending',
+        id: orderId, order_number: orderNumber, status: 'new',
         payment_method: 'cash_on_delivery', payment_status: 'unpaid',
         items, customer: { name: customer.name.trim(), phone: customer.phone.trim() },
         address: { wilaya: address.wilaya, wilayaCode: address.wilayaCode || '', municipality: address.municipality || '', address: address.address.trim() },
@@ -287,15 +296,17 @@ export async function PUT(request, { params }) {
   const body = await request.json().catch(() => ({}));
 
   try {
-    // ── Admin: update order status ────────────────────────────────────────────
+    // ── Admin: update order status + notes ────────────────────────────────────
     if (path === 'admin/orders') {
       if (!isAdmin(request)) return unauthorized();
-      const { id, status } = body || {};
-      const VALID_STATUSES = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled'];
+      const { id, status, notes } = body || {};
+      const VALID_STATUSES = ['new', 'pending_call', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled', 'returned'];
       if (!id || !VALID_STATUSES.includes(status))
         return cors(NextResponse.json({ error: 'Invalid id or status' }, { status: 400 }));
       const db = createSupabaseAdmin();
-      const { error } = await db.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+      const updates = { status, updated_at: new Date().toISOString() };
+      if (notes !== undefined) updates.notes = notes;
+      const { error } = await db.from('orders').update(updates).eq('id', id);
       if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
       return cors(NextResponse.json({ ok: true }));
     }
@@ -329,6 +340,19 @@ export async function PUT(request, { params }) {
       const updates = body || {};
       const upserts = Object.entries(updates).map(([key, value]) => ({ key, value }));
       const { error } = await db.from('store_settings').upsert(upserts, { onConflict: 'key' });
+      if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
+      return cors(NextResponse.json({ ok: true }));
+    }
+
+    // ── ADMIN: Update shipping prices by wilaya ───────────────────────────────
+    if (path === 'admin/shipping') {
+      if (!isAdmin(request)) return unauthorized();
+      const db = createSupabaseAdmin();
+      const shippingData = body || {};
+      const { error } = await db.from('store_settings').upsert(
+        { key: 'shipping_by_wilaya', value: shippingData },
+        { onConflict: 'key' }
+      );
       if (error) return cors(NextResponse.json({ error: error.message }, { status: 500 }));
       return cors(NextResponse.json({ ok: true }));
     }
